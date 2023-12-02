@@ -47,19 +47,19 @@ func main() {
 }
 
 func checkForNumbers(word string) (list []int) {
-	found_combinations := []int{}
 	substring := ""
 
 	for i := 0; i < len(word); i++ {
 		substring += string(word[i])
 		for i, val := range spelled_numbers {
 			if strings.Contains(substring, val) {
-				found_combinations = append(found_combinations, i+1)
+				list = append(list, i+1)
 
 				substring = substring[len(substring)-2:]
 			}
 		}
 
 	}
-	return found_combinations
+
+	return
 }
