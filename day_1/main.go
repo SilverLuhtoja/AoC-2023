@@ -9,7 +9,6 @@ import (
 )
 
 var spelled_numbers = []string{"one", "two", "three", "four", "five", "six", "seven", "eight", "nine"}
-var numerics = []int{1, 2, 3, 4, 5, 6, 7, 8, 9}
 
 func main() {
 	var total int = 0
@@ -53,10 +52,9 @@ func checkForNumbers(word string) (list []int) {
 
 	for i := 0; i < len(word); i++ {
 		substring += string(word[i])
-		for _, val := range spelled_numbers {
+		for i, val := range spelled_numbers {
 			if strings.Contains(substring, val) {
-				idx := getIndex(val)
-				found_combinations = append(found_combinations, numerics[idx])
+				found_combinations = append(found_combinations, i+1)
 
 				substring = substring[len(substring)-2:]
 			}
@@ -64,13 +62,4 @@ func checkForNumbers(word string) (list []int) {
 
 	}
 	return found_combinations
-}
-
-func getIndex(value string) (index int) {
-	for i, val := range spelled_numbers {
-		if val == value {
-			index = i
-		}
-	}
-	return index
 }
