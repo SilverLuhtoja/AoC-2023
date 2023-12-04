@@ -13,18 +13,12 @@ type GameConfig struct {
 	blue  int
 }
 
-// 2 , 6, 9, = 17
-var input string = `
-	Game 1: 1 red, 5 blue, 1 green; 16 blue, 3 red; 6 blue, 5 red; 4 red, 7 blue, 1 green
-	Game 2: 4 blue; 4 red, 3 blue, 1 green; 4 red, 9 blue, 2 green; 5 blue, 7 green, 4 red
-	Game 3: 10 blue; 7 blue, 1 green; 19 blue, 1 green, 9 red
-	Game 4: 2 green; 14 blue, 14 red, 4 green; 12 red, 11 green, 13 blue; 5 green, 9 red, 4 blue; 9 red, 7 green, 12 blue; 2 green, 3 blue, 8 red
-	Game 5: 3 blue, 4 red; 12 red, 2 green, 15 blue; 1 red, 10 blue, 1 green
-	Game 6: 1 blue, 7 red; 3 green, 5 red, 1 blue; 1 green, 7 red; 6 red, 1 blue, 4 green; 1 green, 8 red, 1 blue; 2 green, 4 red, 1 blue
-	Game 7: 11 green, 10 blue, 2 red; 1 green, 12 blue, 2 red; 9 green, 14 blue; 1 red, 19 blue, 15 green
-	Game 8: 4 green, 2 red, 14 blue; 9 green, 1 red, 15 blue; 2 green, 9 red, 8 blue; 11 green, 7 red, 8 blue; 9 red, 7 green, 6 blue
-	Game 9: 4 blue, 1 green, 2 red; 1 blue, 3 red; 1 red, 3 blue, 3 green
-	Game 10: 4 red, 3 green, 6 blue; 2 green, 15 blue, 6 red; 3 green, 2 blue; 2 red, 1 green; 11 blue, 7 red, 4 green; 2 blue, 2 red, 4 green
+var input2 string = `
+	Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+	Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
+	Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
+	Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
+	Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green
 `
 
 func newGameConfig(red, green, blue int) GameConfig {
@@ -35,57 +29,49 @@ func newGameConfig(red, green, blue int) GameConfig {
 	}
 }
 
-// 2274 too low, 2460 to big
 func main() {
-	rules := newGameConfig(12, 13, 14)
 	all_lines := strings.Split(Input, "Game")
+	// partOneRun(all_lines)
 	total := 0
-	for i, line := range all_lines[1:] {
+	for _, line := range all_lines[1:] {
 		game := strings.Split(line, ":")
 		game_sets := strings.Split(game[1], ";")
-		isValid := rules.isValidGame(game_sets)
-
-		if isValid {
-			// fmt.Println(i + 1)
-			total += i + 1
-		}
-		// fmt.Printf("VALID : %v, GAME : %v \n", isValid, i)
+		total += getLowestSet(game_sets)
 	}
-	fmt.Printf("TOTAL SUMMED WON GAMES: %v \n", total)
+
+	fmt.Println(total)
 }
 
-func (cfg *GameConfig) isValidGame(game_sets []string) bool {
+func getLowestSet(game_sets []string) int {
+	lowestSet := newGameConfig(0, 0, 0)
 	for _, set := range game_sets {
 		values := strings.Split(set, ",")
 
 		for _, val := range values {
-			draw := strings.Split(val, " ")
+			draw := strings.Split(strings.TrimSpace(val), " ")
 
-			box_count, err := strconv.Atoi(draw[1])
+			box_count, err := strconv.Atoi(draw[0])
 			if err != nil {
-				log.Fatalf("Not a number : %s", err)
+				log.Fatalf("Not a number: %s", err)
 			}
 
-			box_color := draw[2]
-
+			box_color := draw[1]
 			switch box_color {
 			case "red":
-				if box_count > cfg.red {
-					fmt.Println(box_count)
-					return false
+				if box_count > lowestSet.red {
+					lowestSet.red = box_count
 				}
 			case "green":
-				if box_count > cfg.green {
-					return false
+				if box_count > lowestSet.green {
+					lowestSet.green = box_count
 				}
 			case "blue":
-				if box_count > cfg.blue {
-					return false
+				if box_count > lowestSet.blue {
+					lowestSet.blue = box_count
 				}
 			}
 		}
 	}
 
-	// fmt.Println(game_sets)
-	return true
+	return lowestSet.red * lowestSet.green * lowestSet.blue
 }
