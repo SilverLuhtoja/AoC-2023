@@ -5,33 +5,8 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"utils"
 )
-
-// var input1 = `
-// 	467..114..
-// 	...*......
-// 	..35..633.
-// 	......#...
-// 	617*......
-// 	.....+.58.
-// 	..592.....
-// 	......755.
-// 	...$.*....
-// 	.664.598..
-// `
-
-var input1 = `
-	.467.114..
-	....*.....
-	..35..633.
-	...831&267
-`
-
-// var input1 = `
-// ...766.......821.547.....577......................................387.....................56..........446.793..........292..................
-// ...........................%...../.....981..........627..../..........-.....623......610..-..............*..................16......891.....
-// ...$...........716..&336.......470.325.................*.84........$..34....*.....+.....#.....*76....#.........303.433........-........&....
-// `
 
 type Table struct {
 	matrix [][]rune
@@ -48,114 +23,75 @@ func newMatrixTable(input string) Table {
 	return Table{matrix: m}
 }
 
-// func (t *Table) printMatrix(matrix [][]rune) {
-// 	for _, row := range matrix {
-// 		fmt.Println(string(row))
-// 	}
-// }
-
-// func (t *Table) isOutOfBounds(row, col int) bool {
-// 	if row <= 0 || row > len(t.matrix)-1 || col <= 0 || col > len(t.matrix)-1 {
-// 		return true
-// 	}
-// 	return false
-// }
-
 func main() {
-	// table := newMatrixTable(Input)
-	table := newMatrixTable(input1)
+	table := newMatrixTable(Input)
 
-	checkTo := 0
-	current_number := ""
-	checkFrom := 0
-	allNumbersNextToSymbols := []string{}
+	gearMap := make(map[string][]int)
+
 	for row := range table.matrix {
-		for col := range table.matrix[row] {
-			cursor := table.matrix[row][col]
-			if isNumber(cursor) {
-				if current_number == "" {
-					if col == 0 {
-						checkFrom = col
-					} else {
-						checkFrom = col - 1
-					}
+		start := 0
+
+		for col := 0; col < len(table.matrix[0]); col++ {
+			start = col
+			current_number := ""
+
+			for col < len(table.matrix[0]) && utils.IsNumber(table.matrix[row][col]) {
+				current_number += string(table.matrix[row][col])
+				col += 1
+			}
+
+			if current_number == "" {
+				continue
+			}
+
+			number, err := strconv.Atoi(current_number)
+			if err != nil {
+				log.Fatal("NOT A NUMBER")
+			}
+
+			if table.lookForStar(row, start-1) {
+				gearMap[makeKey(row, start-1)] = append(gearMap[makeKey(row, start-1)], number)
+				continue
+			}
+
+			if table.lookForStar(row, col) {
+				gearMap[makeKey(row, col)] = append(gearMap[makeKey(row, col)], number)
+				continue
+			}
+
+			for c := start - 1; c < col+1; c++ {
+				if table.lookForStar(row-1, c) {
+					gearMap[makeKey(row-1, c)] = append(gearMap[makeKey(row-1, c)], number)
+					break
 				}
-				current_number += string(cursor)
 
-			} else {
-				checkTo = col
-				if current_number != "" {
-
-					if table.numberNextToSymbol(row, checkFrom, checkTo) {
-						allNumbersNextToSymbols = append(allNumbersNextToSymbols, current_number)
-					} else {
-						fmt.Println(current_number)
-						fmt.Println(checkFrom, checkTo)
-					}
+				if table.lookForStar(row+1, c) {
+					gearMap[makeKey(row+1, c)] = append(gearMap[makeKey(row+1, c)], number)
+					break
 				}
-
-				current_number = ""
-				checkFrom = 0
-				checkTo = 0
-
 			}
 		}
 	}
 
 	total := 0
 
-	for _, nr := range allNumbersNextToSymbols {
-		number, err := strconv.Atoi(nr)
-		if err != nil {
-			log.Fatal("NOT A NUMBER")
-		}
-		total += number
-	}
-
-	// fmt.Println(total)
-	fmt.Println(allNumbersNextToSymbols)
-}
-
-func isNumber(cursor rune) bool {
-	if cursor >= 48 && cursor <= 57 {
-		return true
-	}
-	return false
-}
-
-func isSymbol(cursor rune) bool {
-	ok := !isNumber(cursor) && string(cursor) != "."
-	// if ok {
-	// 	fmt.Print(string("GOT SYMBOL :"))
-	// 	fmt.Println(string(cursor))
-	// }
-	return ok
-}
-
-func (t *Table) numberNextToSymbol(row, checkFrom, checkTo int) bool {
-	if isSymbol(t.matrix[row][checkFrom]) || isSymbol(t.matrix[row][checkTo]) {
-		return true
-	}
-
-	searcableRow := row - 1
-	if searcableRow > 0 {
-		// fmt.Printf("UPPER row : %v, from: %v , to: %v \n", searcableRow, checkFrom, checkTo)
-		for i := checkFrom; i <= checkTo; i++ {
-			if isSymbol(t.matrix[searcableRow][i]) {
-				return true
-			}
+	for _, values := range gearMap {
+		if len(values) == 2 {
+			total += values[0] * values[1]
 		}
 	}
 
-	searcableRow = row + 1
-	if searcableRow < len(t.matrix) {
-		// fmt.Printf("LOWER row : %v, from: %v , to: %v \n", searcableRow, checkFrom, checkTo)
-		for i := checkFrom; i <= checkTo; i++ {
-			if isSymbol(t.matrix[searcableRow][i]) {
-				return true
-			}
-		}
+	fmt.Println(total)
+}
+
+func (t *Table) lookForStar(row, col int) bool {
+	if !(0 <= row && row < len(t.matrix) && 0 <= col && col < len(t.matrix[0])) {
+		return false
 	}
 
-	return false
+	return t.matrix[row][col] == '*'
+}
+
+func makeKey(row, col int) string {
+	return fmt.Sprintf(strconv.Itoa(row), "-", strconv.Itoa(col))
 }
