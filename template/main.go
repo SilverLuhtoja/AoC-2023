@@ -1,6 +1,6 @@
 package main
 
-var input1 = `
+var input = `
 
 `
 
